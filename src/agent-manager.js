@@ -122,6 +122,12 @@ function promoteAgent(name, newName = null) {
     return false;
   }
 
+  // Check for name conflicts
+  if (fs.existsSync(definedPath)) {
+    console.error(`Defined agent already exists: ${targetName}`);
+    return false;
+  }
+
   // Move file
   fs.renameSync(tempPath, definedPath);
 
