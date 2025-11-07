@@ -8,7 +8,11 @@ The Orchestration plugin enables you to define and execute complex multi-agent w
 
 ## Features
 
+- **Natural Language Creation**: Describe workflows in plain language, guided by Socratic questioning
 - **Declarative Workflow Syntax**: Define workflows using intuitive operators (`->`, `||`, `~>`)
+- **Custom Syntax**: Create domain-specific syntax elements with reuse-first approach
+- **Variable Binding**: Explicit condition tracking with named variables
+- **Global Syntax Library**: Share reusable syntax across all workflows
 - **Visual Feedback**: ASCII art visualization with real-time status updates
 - **Parallel Execution**: Run independent agents simultaneously for faster completion
 - **Interactive Steering**: Pause, jump, repeat, or modify workflows mid-execution
@@ -57,6 +61,26 @@ Then in Claude Code:
 ```
 /orchestrate @try -> fix -> test (if failed)~> @try
 ```
+
+## Natural Language Workflow Creation
+
+Don't want to learn syntax? Describe your workflow in plain language:
+
+```
+/orchestration:create deploy with security validation
+```
+
+The system guides you through questions to refine your intent, then generates the workflow for you.
+
+**Features:**
+- Socratic questioning refines vague descriptions
+- Learns from existing templates and patterns
+- Creates custom syntax when needed
+- Saves as reusable templates
+- Variable binding for explicit conditions
+- Supports negative conditions with `!`
+
+**Learn more:** [Natural Language Guide](docs/features/natural-language.md)
 
 ## Workflow Syntax
 
@@ -131,6 +155,8 @@ explore:"analyze {{target}}" -> fix -> deploy:"{{target}}"
 
 ## Commands
 
+- `/orchestration:create [description]` - Create workflow from natural language
+- `/orchestration:create` - Interactive workflow creation
 - `/orchestrate` - Interactive menu
 - `/orchestrate help` - Quick reference
 - `/orchestrate examples` - Example gallery
@@ -166,6 +192,21 @@ When agents fail, choose from:
 - `(d)ebug` - Insert debug step
 - `(f)ork` - Try parallel approaches
 - `(q)uit` - Abort
+
+## Custom Syntax
+
+Extend orchestration with custom syntax elements:
+
+- **Operators**: Custom flow control (`=>`, `<~`)
+- **Actions**: Reusable fragments (`@deep-review`)
+- **Checkpoints**: Custom approval points (`@security-gate`)
+- **Loops**: Retry patterns (`retry-with-backoff`)
+- **Conditions**: Domain logic (`if security-critical`)
+- **Guards**: Pre-conditions (`require-clean-working-tree`)
+- **Tools**: External tools (`tool:npm:test`)
+- **MCPs**: MCP integrations (`mcp:supabase:execute_sql`)
+
+**Learn more:** [Custom Syntax Guide](docs/topics/custom-syntax.md)
 
 ## Best Practices
 
