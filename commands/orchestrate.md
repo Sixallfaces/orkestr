@@ -35,25 +35,91 @@ Enable users to define complex multi-agent workflows as sequences, parallel exec
 
 ## Menu Mode
 
-When no arguments:
+When no arguments, present interactive menu with AskUserQuestion:
 
+```javascript
+AskUserQuestion({
+  questions: [{
+    question: "What would you like to do?",
+    header: "Menu",
+    multiSelect: false,
+    options: [
+      {label: "Create from description", description: "Natural language workflow creation"},
+      {label: "New workflow", description: "Create workflow from syntax"},
+      {label: "Load template", description: "Execute saved flow"},
+      {label: "List templates", description: "Show all templates"},
+      {label: "Manage syntax", description: "View/edit global syntax library"},
+      {label: "View docs", description: "Help, examples, or topic guides"}
+    ]
+  }]
+})
 ```
-╔════════════════════════════════════════════╗
-║     Workflow Orchestration System          ║
-╠════════════════════════════════════════════╣
-║                                            ║
-║  (n) New workflow - Create from syntax    ║
-║  (l) Load template - Execute saved flow   ║
-║  (t) List templates - Show all templates  ║
-║                                            ║
-║  (h) Help - Quick reference               ║
-║  (e) Explain - Topic documentation        ║
-║  (x) Examples - Gallery of workflows      ║
-║                                            ║
-║  (q) Quit                                  ║
-║                                            ║
-╚════════════════════════════════════════════╝
-```
+
+**Handler Actions:**
+
+**Create from description:**
+- Execute `/orchestration:create`
+- This launches the natural language workflow creation flow
+
+**New workflow:**
+- Prompt for workflow syntax
+- Parse and execute inline
+
+**Load template:**
+- Show available templates from examples/
+- Let user select template
+- Execute selected template
+
+**List templates:**
+- Glob examples/*.flow
+- Display table: Name | Description | Parameters
+- Offer to execute or view any template
+
+**Manage syntax:**
+- Present submenu for global syntax management
+- Use AskUserQuestion:
+  ```javascript
+  AskUserQuestion({
+    questions: [{
+      question: "Manage global syntax library:",
+      header: "Syntax",
+      multiSelect: false,
+      options: [
+        {label: "List all syntax", description: "Show all global syntax elements"},
+        {label: "View by type", description: "Browse operators, actions, etc."},
+        {label: "Search syntax", description: "Find specific syntax elements"},
+        {label: "Back to menu", description: "Return to main menu"}
+      ]
+    }]
+  })
+  ```
+
+**List all syntax:**
+- Use Glob to find all syntax files: library/syntax/**/*.md
+- Read frontmatter from each file
+- Display table: Type | Name | Description
+- Return to syntax submenu
+
+**View by type:**
+- Ask which type to view (operators, actions, checkpoints, etc.)
+- List files in that directory
+- Show name and description for each
+- Allow viewing full content
+- Return to syntax submenu
+
+**Search syntax:**
+- Ask for search term
+- Use Grep to search descriptions and content in library/syntax/
+- Display matching syntax elements
+- Allow viewing full content
+- Return to syntax submenu
+
+**View docs:**
+- Present submenu:
+  - Help - Quick reference
+  - Examples - Examples gallery
+  - Explain topic - Detailed documentation
+  - Back to menu
 
 ---
 
@@ -84,6 +150,7 @@ When arguments are "help":
 ║  @try -> fix -> test (if failed)~> @try                     ║
 ║                                                              ║
 ║  COMMANDS                                                    ║
+║  /orchestration:create            Natural language creation  ║
 ║  /orchestrate help                Quick reference            ║
 ║  /orchestrate explain <topic>     Detailed docs              ║
 ║  /orchestrate examples            Gallery                    ║
