@@ -2,450 +2,95 @@
 description: Multi-agent workflow orchestration with visual feedback
 ---
 
-# Workflow Orchestration System
+# Workflow Orchestration System Router
 
-You are the Workflow Orchestrator for Claude Code. Parse, execute, and manage multi-agent workflows using declarative syntax.
-
-## Purpose
-
-Enable users to define complex multi-agent workflows as sequences, parallel execution, or conditional logic. Handle execution, visualization, and error recovery automatically.
+You are the Workflow Orchestrator for Claude Code. This command routes to specialized subcommands based on the mode.
 
 ## Quick Start
 
 ```
-/orchestrate explore:"find bugs" -> review -> implement
-/orchestrate [test || lint] (all success)~> deploy
-/orchestrate tdd-feature
+/orchestration:orchestrate                    Interactive menu
+/orchestration:orchestrate help               Quick reference
+/orchestration:orchestrate explain [topic]    Detailed docs
+/orchestration:orchestrate examples           Gallery
+/orchestration:orchestrate <template-name>    Execute template
+/orchestration:orchestrate <workflow-syntax>  Execute inline workflow
 ```
 
 ## Arguments: {{ARGS}}
 
 ## Mode Detection
 
-1. Empty → **Menu Mode** (interactive menu)
-2. "help" → **Help Mode** (quick reference)
-3. "explain" [topic] → **Documentation Mode** (topic docs)
-4. "examples" → **Examples Gallery**
-5. Template exists → **Template Mode** (execute saved template)
-6. Otherwise → **Inline Mode** (parse and execute workflow)
+Analyze {{ARGS}} to determine the mode and route accordingly:
 
-**Detected mode:** [Analyze {{ARGS}} and state mode]
+1. **Empty or Menu** → Route to `/orchestration:menu`
+   - No arguments provided
+   - User explicitly requested menu
 
----
+2. **Help Mode** → Route to `/orchestration:help`
+   - Arguments are "help"
 
-## Menu Mode
+3. **Documentation Mode** → Route to `/orchestration:explain [topic]`
+   - Arguments start with "explain"
+   - Pass topic if specified
 
-When no arguments, present interactive menu with AskUserQuestion:
+4. **Examples Mode** → Route to `/orchestration:examples`
+   - Arguments are "examples"
+
+5. **Template Mode** → Route to `/orchestration:template <name>`
+   - Template file exists at `~/.claude/plugins/repos/orchestration/examples/{{ARGS}}.flow`
+   - Check with: Glob `~/.claude/plugins/repos/orchestration/examples/{{ARGS}}.flow`
+
+6. **Inline Mode** → Route to `/orchestration:run <syntax>`
+   - Arguments contain workflow syntax (operators like `->`, `||`, `~>`, `@`, `[]`)
+   - This is the default if no other mode matches
+
+## Routing Logic
 
 ```javascript
-AskUserQuestion({
-  questions: [{
-    question: "What would you like to do?",
-    header: "Menu",
-    multiSelect: false,
-    options: [
-      {label: "Create from description", description: "Natural language workflow creation"},
-      {label: "New workflow", description: "Create workflow from syntax"},
-      {label: "Load template", description: "Execute saved flow"},
-      {label: "List templates", description: "Show all templates"},
-      {label: "Manage syntax", description: "View/edit global syntax library"},
-      {label: "View docs", description: "Help, examples, or topic guides"}
-    ]
-  }]
-})
-```
+// Pseudocode for routing
+const args = {{ARGS}}.trim();
 
-**Handler Actions:**
-
-**Create from description:**
-- Execute `/orchestration:create`
-- This launches the natural language workflow creation flow
-
-**New workflow:**
-- Prompt for workflow syntax
-- Parse and execute inline
-
-**Load template:**
-- Show available templates from examples/
-- Let user select template
-- Execute selected template
-
-**List templates:**
-- Glob examples/*.flow
-- Display table: Name | Description | Parameters
-- Offer to execute or view any template
-
-**Manage syntax:**
-- Present submenu for global syntax management
-- Use AskUserQuestion:
-  ```javascript
-  AskUserQuestion({
-    questions: [{
-      question: "Manage global syntax library:",
-      header: "Syntax",
-      multiSelect: false,
-      options: [
-        {label: "List all syntax", description: "Show all global syntax elements"},
-        {label: "View by type", description: "Browse operators, actions, etc."},
-        {label: "Search syntax", description: "Find specific syntax elements"},
-        {label: "Back to menu", description: "Return to main menu"}
-      ]
-    }]
-  })
-  ```
-
-**List all syntax:**
-- Use Glob to find all syntax files: library/syntax/**/*.md
-- Read frontmatter from each file
-- Display table: Type | Name | Description
-- Return to syntax submenu
-
-**View by type:**
-- Ask which type to view (operators, actions, checkpoints, etc.)
-- List files in that directory
-- Show name and description for each
-- Allow viewing full content
-- Return to syntax submenu
-
-**Search syntax:**
-- Ask for search term
-- Use Grep to search descriptions and content in library/syntax/
-- Display matching syntax elements
-- Allow viewing full content
-- Return to syntax submenu
-
-**View docs:**
-- Present submenu:
-  - Help - Quick reference
-  - Examples - Examples gallery
-  - Explain topic - Detailed documentation
-  - Back to menu
-
----
-
-## Help Mode
-
-When arguments are "help":
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║                Orchestration Quick Reference                 ║
-╠══════════════════════════════════════════════════════════════╣
-║                                                              ║
-║  OPERATORS                                                   ║
-║  step1 -> step2           Sequential                         ║
-║  step1 || step2           Parallel                           ║
-║  step (if cond)~> next    Conditional                        ║
-║  @label                   Checkpoint                         ║
-║  [...]                    Subgraph                           ║
-║                                                              ║
-║  AGENTS                                                      ║
-║  explore:"task"           Investigation                      ║
-║  general-purpose:"task"   Implementation                     ║
-║  code-reviewer:"task"     Quality check                      ║
-║                                                              ║
-║  EXAMPLES                                                    ║
-║  explore:"find bugs" -> review -> implement                  ║
-║  [test || lint] (all success)~> deploy                      ║
-║  @try -> fix -> test (if failed)~> @try                     ║
-║                                                              ║
-║  COMMANDS                                                    ║
-║  /orchestration:create            Natural language creation  ║
-║  /orchestrate help                Quick reference            ║
-║  /orchestrate explain <topic>     Detailed docs              ║
-║  /orchestrate examples            Gallery                    ║
-║  /orchestrate <syntax>            Execute                    ║
-║                                                              ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
----
-
-## Documentation Mode
-
-When arguments are "explain" or "explain <topic>":
-
-**Available Topics:**
-- syntax - Operators and grammar
-- agents - Agent invocation
-- parallel - Parallel execution
-- conditionals - Conditional flow
-- loops - Retry patterns
-- checkpoints - Pause points
-- subgraphs - Nested flows
-- templates - Template system
-- custom - Custom definitions
-- error-handling - Recovery strategies
-
-**No topic specified?** List topics above and prompt for selection.
-
-**Topic specified?** Use Read tool to load documentation:
-```
-Read(~/.claude/plugins/repos/orchestration/docs/topics/{topic}.md)
-```
-Display full content to user. If file doesn't exist, show available topics.
-
----
-
-## Examples Mode
-
-When arguments are "examples":
-
-**Action:** Use Read tool to load and display the examples gallery:
-```
-Read(~/.claude/plugins/repos/orchestration/docs/reference/examples.md)
-```
-
-Display the full content to user.
-
----
-
-## Template Mode
-
-When template file exists at `~/.claude/workflows/{{ARGS}}.flow`:
-
-1. Read template file
-2. Parse YAML frontmatter (name, description, params)
-3. Prompt for parameter values
-4. Substitute {{param}} placeholders
-5. Parse workflow syntax
-6. Execute (jump to Inline Mode execution)
-
-**Template Format:**
-```yaml
----
-name: template-name
-params:
-  param1: Description (default: value)
----
-
-Workflow:
-step1:"{{param1}}" -> step2
-```
-
----
-
-## Inline Mode
-
-When arguments contain workflow syntax:
-
-### Phase 1: Parse
-
-Reference: `docs/core/parser.md`
-
-1. **Tokenize** - Split by operators: `->`, `||`, `~>`, `@`, `[...]`
-2. **Build AST** - Parse tokens into tree (precedence: `[]` > `||` > `->` > `~>`)
-3. **Create Graph** - Convert to directed graph with nodes and edges
-4. **Validate** - Check for:
-   - Unclosed subgraphs
-   - Unknown agents
-   - Orphaned nodes
-   - Circular dependencies
-   - Invalid conditions
-
-**Output:**
-```javascript
-{
-  nodes: [{id, type, agent, instruction, status: "pending"}],
-  edges: [{from, to, condition}]
+if (!args || args === 'menu') {
+  execute('/orchestration:menu');
+}
+else if (args === 'help') {
+  execute('/orchestration:help');
+}
+else if (args.startsWith('explain')) {
+  const topic = args.replace('explain', '').trim();
+  execute(`/orchestration:explain ${topic}`);
+}
+else if (args === 'examples') {
+  execute('/orchestration:examples');
+}
+else if (templateExists(`~/.claude/plugins/repos/orchestration/examples/${args}.flow`)) {
+  execute(`/orchestration:template ${args}`);
+}
+else {
+  // Contains workflow syntax
+  execute(`/orchestration:run ${args}`);
 }
 ```
 
-**Errors?** Display clear message with context and abort.
+## Implementation
 
-### Phase 2: Visualize
+1. Parse {{ARGS}}
+2. Detect mode using logic above
+3. Execute appropriate subcommand with SlashCommand tool
+4. Let subcommand handle all logic
 
-Reference: `docs/core/visualizer.md`
+## Subcommand Overview
 
-Display ASCII art visualization:
-
-```
-╔════════════════════════════════════════════╗
-║  Workflow: [name]                          ║
-╠════════════════════════════════════════════╣
-║                                            ║
-║    [step-1] ○                              ║
-║        │                                   ║
-║    ┌───┴───┐                               ║
-║  [step-2] [step-3] ○ ○                     ║
-║    └───┬───┘                               ║
-║    [merge] ○                               ║
-║                                            ║
-╠════════════════════════════════════════════╣
-║ Status: Ready to execute                   ║
-╠════════════════════════════════════════════╣
-║ (c)ontinue  (e)dit  (q)uit                 ║
-╚════════════════════════════════════════════╝
-```
-
-**Status Indicators:**
-- ○ Pending
-- ● Executing
-- ✓ Completed
-- ✗ Failed
-- ⊗ Skipped
-
-**Confirm with user before execution.**
-
-### Phase 3: Execute
-
-Reference: `docs/core/executor.md`
-
-**Algorithm:**
-1. Initialize all nodes to ○ pending
-2. Loop until complete:
-   - Find executable nodes (dependencies satisfied)
-   - Launch agents via Task tool (parallel if multiple)
-   - Wait for completion
-   - Update status and visualization
-   - Evaluate conditionals
-   - Handle checkpoints
-   - Handle errors
-3. Display final results
-
-**Agent Mapping:**
-- `explore` → `Explore` subagent
-- `general-purpose` → `general-purpose` subagent
-- `code-reviewer` → `superpowers:code-reviewer` subagent
-
-**Parallel Execution:**
-Launch all parallel agents in single response using multiple Task calls.
-
-**Conditional Evaluation:**
-- `if passed` → Check for success indicators
-- `if failed` → Check for failure indicators
-- `if all success` → All parallel branches succeeded
-- `if any success` → At least one succeeded
-- Custom conditions → Interpret from output
-
-**Checkpoints:**
-When reaching `@label`:
-1. Pause execution
-2. Show steering menu (see Steering below)
-3. Wait for command
-4. Resume based on command
-
-### Phase 4: Steering
-
-Reference: `docs/core/steering.md`
-
-At checkpoints and after errors, provide control:
-
-```
-╠════════════════════════════════════════════╣
-║ (c)ontinue  (j)ump  (r)epeat  (e)dit      ║
-║ (v)iew-output  (q)uit                      ║
-╚════════════════════════════════════════════╝
-```
-
-**Commands:**
-- `(c)` Continue - Resume from current point
-- `(j)` Jump - Select node to jump to
-- `(r)` Repeat - Re-execute last node
-- `(e)` Edit - Modify workflow syntax and reparse
-- `(v)` View - Display full output from node
-- `(q)` Quit - Abort with summary
-
-### Phase 5: Error Recovery
-
-Reference: `docs/features/error-handling.md`
-
-When agent fails:
-
-```
-╔════════════════════════════════════════════╗
-║  ERROR: Agent Execution Failed             ║
-╠════════════════════════════════════════════╣
-║  Node: [failed-node] ✗                     ║
-║  Error: [message]                          ║
-╠════════════════════════════════════════════╣
-║  (r) Retry - Re-execute                    ║
-║  (e) Edit - Modify workflow                ║
-║  (s) Skip - Continue past failure          ║
-║  (d) Debug - Insert debug step             ║
-║  (f) Fork - Try parallel approaches        ║
-║  (q) Quit - Abort                          ║
-╚════════════════════════════════════════════╝
-```
-
-**Context-aware suggestions** based on error type.
-
-### Completion
-
-```
-╔════════════════════════════════════════════╗
-║  Workflow Complete                         ║
-╠════════════════════════════════════════════╣
-║  Total steps: 12                           ║
-║  Completed: 11 ✓                           ║
-║  Failed: 1 ✗                               ║
-║  Duration: 3m 45s                          ║
-╠════════════════════════════════════════════╣
-║  (v)iew results  (s)ave template  (q)uit   ║
-╚════════════════════════════════════════════╝
-```
+- **orchestration:menu** - Interactive menu system
+- **orchestration:help** - Quick reference guide
+- **orchestration:explain** - Topic documentation
+- **orchestration:examples** - Examples gallery
+- **orchestration:template** - Template execution with parameters
+- **orchestration:run** - Parse and execute workflow syntax
 
 ---
 
-## Implementation Notes
+## Execute Router
 
-**State Management:**
-Maintain execution state throughout:
-```javascript
-{
-  mode: "menu" | "help" | "explain" | "examples" | "template" | "inline",
-  workflow: "original syntax",
-  graph: {nodes, edges},
-  execution: {current, completed, failed, outputs},
-  steering: {paused, position, command}
-}
-```
-
-**Key Principles:**
-1. Parse first, execute later
-2. Show visualizations throughout
-3. Provide user control at checkpoints
-4. Fail gracefully with recovery options
-5. Context-aware error messages
-
-**Performance:**
-- Launch parallel agents in single response
-- Keep visualizations under 80 chars width
-- Limit parallel branches to 3-5 for clarity
-- Split large workflows (>50 nodes) into templates
-
----
-
-## Documentation References
-
-**Core Implementation:**
-- `docs/core/parser.md` - Syntax parsing details
-- `docs/core/executor.md` - Execution algorithm
-- `docs/core/visualizer.md` - Rendering system
-- `docs/core/steering.md` - Interactive control
-
-**Features:**
-- `docs/features/templates.md` - Template system
-- `docs/features/error-handling.md` - Recovery strategies
-- `docs/features/custom-definitions.md` - Extension system
-
-**Reference:**
-- `docs/reference/syntax.md` - Complete syntax specification
-- `docs/reference/examples.md` - Example gallery
-- `docs/reference/best-practices.md` - Guidelines and limitations
-
-**Topics:** (loaded on demand via "explain <topic>")
-- `docs/topics/*.md` - Individual topic documentation
-
----
-
-## Execute Mode Handler
-
-[Based on detected mode above, execute appropriate handler]
-
-**If Menu Mode:** Display menu and wait for selection
-**If Help Mode:** Display quick reference
-**If Documentation Mode:** Load and display topic documentation
-**If Examples Mode:** Load and display examples gallery
-**If Template Mode:** Load template, prompt for params, execute
-**If Inline Mode:** Parse → Visualize → Confirm → Execute → Complete
+**Detected mode:** [Analyze {{ARGS}} and state mode, then route to appropriate subcommand]

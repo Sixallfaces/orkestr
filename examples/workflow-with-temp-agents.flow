@@ -1,0 +1,84 @@
+# Example Workflow with Temporary Agents
+# Demonstrates creating and using temporary agents for specialized tasks
+
+# Define temporary agents for this workflow
+@define-agents {
+  codebase-mapper: {
+    base: "Explore",
+    prompt: "You are a codebase architecture specialist. Map out the structure, identify key patterns, and document the architecture.",
+    focus: ["directory structure", "design patterns", "dependencies", "entry points"],
+    model: "sonnet"
+  },
+
+  vulnerability-scanner: {
+    base: "jwt-keycloak-security-auditor",
+    prompt: "Perform comprehensive security audit focusing on OWASP Top 10 and common vulnerabilities.",
+    constraints: ["no code modifications", "check all file types", "include severity ratings"],
+    model: "opus"
+  },
+
+  performance-profiler: {
+    base: "general-purpose",
+    prompt: "Analyze code for performance issues: algorithmic complexity, memory leaks, unnecessary operations.",
+    tools: ["Read", "Grep", "Bash"],
+    model: "haiku"
+  },
+
+  report-generator: {
+    base: "expert-code-implementer",
+    prompt: "Generate comprehensive markdown reports with executive summary, detailed findings, and actionable recommendations.",
+    output_format: "markdown",
+    model: "sonnet"
+  }
+}
+
+# Phase 1: Initial codebase analysis with temporary mapper agent
+$codebase-mapper:"Analyze the project structure, identify main components, document the architecture patterns used, and create a high-level overview":architecture_overview ->
+
+# Phase 2: Parallel specialized analysis using multiple temporary agents
+[
+  $vulnerability-scanner:"Scan entire codebase for security vulnerabilities, check for exposed secrets, analyze authentication flows, identify injection points":security_findings ||
+
+  $performance-profiler:"Profile the codebase for performance bottlenecks, identify O(n²) algorithms, find memory leak patterns, check for unnecessary re-renders or computations":performance_findings ||
+
+  general-purpose:"Run static analysis tools (if available): npm audit, eslint, prettier --check. Capture all warnings and errors":static_analysis_results
+] ->
+
+# Phase 3: Consolidate findings checkpoint
+@review-initial-findings ->
+
+# Phase 4: Deep dive into critical issues (if any found)
+$vulnerability-scanner:"For each critical security issue found, provide detailed exploitation scenario, impact assessment, and specific remediation steps":detailed_security_analysis ->
+
+# Phase 5: Generate comprehensive report using temporary report agent
+$report-generator:"Create a comprehensive analysis report including:
+- Executive Summary from {architecture_overview}
+- Security Assessment from {security_findings} and {detailed_security_analysis}
+- Performance Analysis from {performance_findings}
+- Code Quality from {static_analysis_results}
+- Prioritized recommendations with effort estimates
+Format as professional markdown document":final_report ->
+
+# Phase 6: Review and decision checkpoint
+@review-final-report ->
+
+# Phase 7: Optional - Create implementation plan for fixes
+implementation-architect:"Based on the final report, create a detailed implementation plan to address all critical and high-priority issues. Include task breakdown, time estimates, and dependencies":implementation_plan ->
+
+# Phase 8: Save the report and optionally save useful agents
+general-purpose:"Save the final report to 'codebase-analysis-report.md' in the project root. Include timestamp and version information":report_saved ->
+
+# Phase 9: Cleanup and agent preservation decision
+@save-temp-agents ->
+
+# Phase 10: Summary
+@analysis-complete
+
+# Notes on temporary agents:
+# - $codebase-mapper: Specialized for architecture analysis
+# - $vulnerability-scanner: Security-focused with strict constraints
+# - $performance-profiler: Uses lighter model (haiku) for faster execution
+# - $report-generator: Specialized for creating formatted documentation
+# - Each agent has specific prompt context and configuration
+# - Outputs can be referenced in later agent instructions using {variable_name}
+# - After execution, user can save any of these agents for future use

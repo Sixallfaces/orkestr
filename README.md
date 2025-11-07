@@ -103,6 +103,35 @@ Supported agents:
 - `general-purpose:"instruction"` - General purpose agent for implementation
 - `code-reviewer:"instruction"` - Code review agent for quality checks
 
+### Temporary Agents
+
+Create custom, workflow-specific agents with the `$` syntax:
+
+```
+$agent-name := {base: "agent-type", prompt: "custom prompt", model: "sonnet|opus|haiku"}
+$agent-name:"instruction":output_var
+```
+
+**Example:**
+```
+$security-scanner := {
+  base: "general-purpose",
+  prompt: "Security expert focused on OWASP vulnerabilities",
+  model: "opus"
+}
+
+$security-scanner:"Scan authentication code":issues ->
+general-purpose:"Fix these issues: {issues}"
+```
+
+**Benefits:**
+- Specialized prompts for specific tasks
+- Model selection per agent (opus/sonnet/haiku)
+- Variable capture and interpolation (`:varname`, `{varname}`)
+- No permanent agent pollution
+
+**Learn more:** `docs/features/temporary-agents.md`, `docs/reference/temp-agents-syntax.md`
+
 ### Conditions
 
 - `(if passed)` - Check for success
@@ -130,6 +159,17 @@ Supported agents:
 ```
 /orchestrate explore:"security issues" -> @review -> [fix || document] -> @approve -> deploy
 ```
+
+### Security Scan with Temporary Agents
+
+```
+$scanner := {base: "general-purpose", prompt: "Security expert. Focus on OWASP top 10.", model: "opus"}
+$fixer := {base: "expert-code-implementer", prompt: "Fix security issues safely."}
+
+$scanner:"Scan auth code":issues -> $fixer:"Fix {issues}":fixes -> general-purpose:"Verify fixes"
+```
+
+**More examples:** See `examples/` directory for detailed workflows
 
 ## Templates
 

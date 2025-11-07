@@ -1,0 +1,43 @@
+# Claude Code Plugin Testing & Review Pipeline
+# Static execution graph for comprehensive plugin validation
+
+# Phase 1: Initial Investigation - Explore plugin structure and identify issues
+Explore:"Thoroughly investigate the Claude Code plugin directory. Check plugin.json structure, commands/ directory, skills/ directory, hooks/ directory. Look for malformed configurations, security issues, missing dependencies. Provide comprehensive findings report.":investigation_complete ->
+
+# Phase 2: Parallel Validation - Run multiple validation checks simultaneously
+[
+  general-purpose:"Validate plugin.json structure: Check required fields, validate command definitions, verify skill declarations, check hook configurations. Report any schema violations or missing elements.":structure_validated ||
+
+  jwt-keycloak-security-auditor:"Audit plugin for security vulnerabilities: Check for exposed secrets, insecure API calls, improper authentication, unsafe file operations. Provide security assessment report.":security_validated ||
+
+  expert-code-implementer:"Analyze plugin functionality: Test command implementations, verify skill execution, validate hook behaviors. Check for runtime errors and edge cases.":functionality_validated ||
+
+  general-purpose:"Analyze GitHub repository patterns: Check for proper .gitignore, README documentation, LICENSE file, contribution guidelines. Compare against Claude Code plugin standards.":patterns_analyzed ||
+
+  general-purpose:"Check Claude Code documentation compliance: Verify command documentation, skill descriptions, usage examples. Ensure alignment with official Claude Code plugin guidelines.":compliance_checked
+] ->
+
+# Phase 3: Consolidation - Merge all validation results
+general-purpose:"Consolidate all validation results from parallel checks. Categorize findings by severity (critical, high, medium, low). Create prioritized list of issues and improvements.":findings_consolidated ->
+
+# Phase 4: User Review - Present findings for review
+@review-validation-results ->
+
+# Phase 5: Action Planning - Generate improvement plan if needed
+implementation-architect:"Based on validation findings, create detailed improvement plan. Include: specific fixes for each issue, implementation order, estimated effort, testing requirements. Focus on critical and high severity items first.":improvement_plan_created ->
+
+# Phase 6: Review Checkpoint - Get approval for improvements
+@approve-improvements ->
+
+# Phase 7: Implementation - Execute approved improvements
+[
+  expert-code-implementer:"Implement critical fixes identified in the improvement plan. Focus on security vulnerabilities, broken functionality, and schema violations.":critical_fixed ||
+
+  expert-code-implementer:"Implement high-priority improvements: documentation updates, configuration fixes, code optimizations. Ensure backwards compatibility.":improvements_implemented
+] ->
+
+# Phase 8: Final Validation - Verify all changes work correctly
+general-purpose:"Run final validation suite: Test all commands, verify skills execute properly, check hooks trigger correctly. Ensure no regressions introduced.":final_validation_complete ->
+
+# Phase 9: Completion Report
+@plugin-validation-summary

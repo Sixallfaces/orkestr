@@ -1,0 +1,47 @@
+# Debug and Fix Issue
+# Static execution graph for systematic debugging and fixing problems
+
+# Phase 1: Reproduce Issue - Understand the problem
+general-purpose:"Reproduce the reported issue. Follow reproduction steps provided. Capture error messages, stack traces, logs. Document observed vs expected behavior. Take screenshots if UI-related.":issue_reproduced ->
+
+# Phase 2: Investigation - Parallel analysis of potential causes
+[
+  Explore:"Search codebase for error message or related code. Look for recent changes that might have introduced the bug. Check git history for relevant commits. Identify all files involved in the error flow.":code_investigated ||
+
+  general-purpose:"Analyze error logs and stack traces. Identify exact line where error occurs. Check for common patterns: null references, type mismatches, async issues, missing dependencies.":logs_analyzed ||
+
+  general-purpose:"Check related configuration files, environment variables, dependencies. Verify versions match requirements. Look for missing configs or incorrect settings.":environment_checked
+] ->
+
+# Phase 3: Root Cause Analysis - Consolidate findings
+general-purpose:"Synthesize all investigation results. Identify root cause of the issue. Explain why the bug occurs and what conditions trigger it. Provide technical explanation of the problem.":root_cause_identified ->
+
+# Phase 4: Solution Planning
+@review-root-cause ->
+
+# Phase 5: Write Regression Test - Prevent future occurrences
+expert-code-implementer:"Write test that reproduces the bug. Test should fail with current broken code. Will serve as regression test after fix is applied. Include edge cases around the bug.":regression_test_written ->
+
+# Phase 6: Implement Fix
+expert-code-implementer:"Implement the fix for the identified root cause. Make minimal changes necessary to resolve the issue. Don't refactor unrelated code. Focus on targeted solution.":fix_implemented ->
+
+# Phase 7: Verify Fix - Parallel validation
+[
+  general-purpose:"Run regression test and verify it now passes. Ensure the specific bug is fixed. Command: npm test [test-file]":regression_test_passes ||
+
+  general-purpose:"Run full test suite to ensure no other tests broke. Check for unintended side effects. Command: npm test":all_tests_pass ||
+
+  general-purpose:"Manually test the fix in the application. Follow original reproduction steps. Verify issue no longer occurs and behavior matches expectations.":manual_verification_complete
+] ->
+
+# Phase 8: Code Review
+@review-fix ->
+
+# Phase 9: Update Documentation
+expert-code-implementer:"Update relevant documentation: Add note about the fix in CHANGELOG, update any affected API docs, add comment in code explaining why fix was needed (if non-obvious).":documentation_updated ->
+
+# Phase 10: Commit Fix
+general-purpose:"Create git commit with fix and test. Message format: 'fix: [description of what was broken]'. Include details about root cause and solution in commit body.":fix_committed ->
+
+# Phase 11: Summary Report
+@issue-resolved

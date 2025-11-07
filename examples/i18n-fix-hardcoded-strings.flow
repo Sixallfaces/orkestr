@@ -1,0 +1,37 @@
+# i18n Fix Hardcoded Strings Workflow
+# Static execution graph for finding and replacing hardcoded strings with i18n translations
+
+# Phase 1: Discovery - Find hardcoded strings in JSX components
+Explore:"Search codebase for hardcoded strings in JSX components (Text tags, placeholders, titles, labels). Exclude already internationalized strings using t() functions. Focus on .tsx and .jsx files. Provide comprehensive list with file locations and context.":strings_found ->
+
+# Phase 2: Analysis - Generate i18n keys for found strings
+general-purpose:"Analyze the hardcoded strings found and generate semantic i18n translation keys following pattern: module.component.purpose. Create English text values and determine which translation file sections they belong in. Provide exact code changes needed.":keys_generated ->
+
+# Phase 3: User Review - Present findings for approval
+@review-findings ->
+
+# Phase 4: Implementation - Apply changes in parallel
+[
+  expert-code-implementer:"Replace all identified hardcoded strings with t() function calls using the generated translation keys. Update all TypeScript/JSX files with proper imports and usage.":code_updated ||
+
+  expert-code-implementer:"Add new translation keys to all locale JSON files (en, es, zh, ru, pl, uk, hi). Maintain proper JSON structure and alphabetical ordering within sections.":translations_updated
+] ->
+
+# Phase 5: Verification - Check changes are correct
+@verify-changes ->
+
+# Phase 6: Testing - Validate the implementation
+[
+  general-purpose:"Run TypeScript compilation check to ensure no syntax errors: npx tsc --noEmit --skipLibCheck":typescript_valid ||
+
+  general-purpose:"Check that all translation keys exist in locale files and no missing keys warnings appear":translations_complete
+] ->
+
+# Phase 7: Commit Decision
+@commit-decision ->
+
+# Phase 8: Finalize - Create git commit
+general-purpose:"Stage all modified files and create git commit with message: 'refactor: replace hardcoded strings with i18n translations'. Include details of changes in commit body.":committed ->
+
+# Phase 9: Success Report
+@completion-summary

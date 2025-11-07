@@ -42,8 +42,7 @@ Follow this process:
    ${description ?
      "- Assess specificity of provided description\n   - Identify workflow pattern hints" :
      "- Ask user what they want to build\n   - Gather initial context"}
-   - Read existing templates for pattern matching: examples/*.flow
-   - Read examples: docs/reference/examples.md
+   - Read existing templates for pattern matching: ~/.claude/plugins/repos/orchestration/examples/*.flow
 
 2. **Socratic Questioning**
    Use AskUserQuestion with single-select or multi-select based on question type.
@@ -102,13 +101,12 @@ Follow this process:
    - Collect template name (suggest based on pattern)
    - Confirm description
    - Confirm parameters
-   - Save to examples/<name>.flow
+   - Save to ~/.claude/plugins/repos/orchestration/examples/<name>.flow
    - Ask which custom syntax to promote to global library
    - Copy promoted syntax to library/syntax/<type>/<name>.md
 
 Context files:
-- Templates: examples/
-- Examples: docs/reference/examples.md
+- Templates: ~/.claude/plugins/repos/orchestration/examples/
 - Global syntax: library/syntax/
 - Best practices: docs/reference/best-practices.md
 
