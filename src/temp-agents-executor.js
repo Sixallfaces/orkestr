@@ -4,6 +4,9 @@
  * Handles runtime variable interpolation and output capture for temporary agents
  */
 
+const agentResolver = require('./agent-resolver');
+const agentManager = require('./agent-manager');
+
 /**
  * Interpolate variables in instruction text
  * @param {string} instruction - Instruction with {var} placeholders
@@ -11,6 +14,17 @@
  * @returns {string} Interpolated instruction
  */
 function interpolateVariables(instruction, variables) {
+  return agentResolver.interpolateVariables(instruction, variables);
+}
+
+/**
+ * @deprecated - Use agentResolver.interpolateVariables directly
+ * Interpolate variables in instruction text (old implementation)
+ * @param {string} instruction - Instruction with {var} placeholders
+ * @param {Object} variables - Map of variable name to value
+ * @returns {string} Interpolated instruction
+ */
+function interpolateVariablesOld(instruction, variables) {
   if (!instruction) return instruction;
 
   return instruction.replace(/\{(\w+)\}/g, (match, varName) => {
@@ -81,20 +95,16 @@ function prepareNodeInstruction(node, variables) {
     return node.instruction;
   }
 
-  // Check dependencies first
-  const depCheck = checkNodeVariableDependencies(node, variables);
-  if (!depCheck.ready) {
-    throw new Error(
-      `Cannot execute node '${node.id}': missing variables: ${depCheck.missing.join(', ')}`
-    );
+  const usesVariables = agentResolver.extractUsedVariables(node.instruction);
+
+  // Check all required variables exist
+  for (const varName of usesVariables) {
+    if (!(varName in variables)) {
+      throw new Error(`Variable not found: ${varName}`);
+    }
   }
 
-  // Interpolate variables
-  try {
-    return interpolateVariables(node.instruction, variables);
-  } catch (error) {
-    throw new Error(`Failed to prepare instruction for node '${node.id}': ${error.message}`);
-  }
+  return agentResolver.interpolateVariables(node.instruction, variables);
 }
 
 /**
@@ -150,6 +160,11 @@ async function executeAgentWithTempAgents(node, state, taskFn) {
   // Capture output
   if (node.outputVar) {
     captureNodeOutput(node, result, state.graph.variables || {});
+  }
+
+  // Increment usage count for defined agents
+  if (node.agentSource === 'defined') {
+    agentManager.incrementUsageCount(node.agentType);
   }
 
   return result;
