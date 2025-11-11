@@ -4,6 +4,9 @@ temp-agents/*.md
 # Temporary scripts (auto-generated)
 temp-scripts/*
 
+# Workflow files with sensitive credentials
+examples/reddit-plugin-promotion.flow
+
 # OS files
 .DS_Store
 Thumbs.db

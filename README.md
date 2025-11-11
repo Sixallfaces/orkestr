@@ -304,6 +304,10 @@ workflow: |
 → Plugin: use `orchestration:` prefix
 → Temp: use `$` prefix
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=mbruhler/claude-orchestration&type=date&legend=top-left)](https://www.star-history.com/#mbruhler/claude-orchestration&type=date&legend=top-left)
+
 ---
 
 ## Support
