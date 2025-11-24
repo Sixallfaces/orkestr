@@ -49,6 +49,8 @@ You should see orchestration commands like `/orchestration:menu`, `/orchestratio
 
 ## Quick Start
 
+**Новичкам:** если нужен максимально простой гайд без погружения в код, посмотрите ["Простое руководство по плагину оркестрации"](docs/topics/beginner-guide.md).
+
 ### 0. Import Your Custom Agents (Optional)
 ```
 /orchestration:init
